@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Duende.IdentityServer.Models;
+using IdentityModel;
 
 namespace Duende.IdentityServer.Validation;
 
@@ -72,6 +73,14 @@ public class SecretParser : ISecretsListParser
     /// <returns></returns>
     public IEnumerable<string> GetAvailableAuthenticationMethods()
     {
-        return _parsers.Select(p => p.AuthenticationMethod).Where(p => !String.IsNullOrWhiteSpace(p));
+        foreach (var authenticationMethod in _parsers.Select(static p => p.AuthenticationMethod).Where(static p => !String.IsNullOrWhiteSpace(p)))
+        {
+            yield return authenticationMethod;
+            if (authenticationMethod == OidcConstants.EndpointAuthenticationMethods.PrivateKeyJwt)
+            {
+                yield return "client_secret_jwt";
+            }
+        }
+        
     }
 }

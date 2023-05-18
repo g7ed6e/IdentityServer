@@ -283,4 +283,40 @@ public class DiscoveryEndpointTests
         var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
         data.ContainsKey("prompt_values_supported").Should().BeFalse();
     }
+    
+    [Fact]
+    [Trait("Category", Category)]
+    public async Task token_endpoint_auth_methods_supported_should_contain_private_key_jwt()
+    {
+        IdentityServerPipeline pipeline = new IdentityServerPipeline();
+        pipeline.OnConfigureIdentityServer += builder => builder.AddJwtBearerClientAuthentication();
+        pipeline.Initialize();
+        pipeline.Options.Endpoints.EnableAuthorizeEndpoint = false;
+
+        var result = await pipeline.BackChannelClient.GetAsync("https://server/.well-known/openid-configuration");
+
+        var json = await result.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+        var tokenEndpointAuthMethodsSupported = data["token_endpoint_auth_methods_supported"].EnumerateArray()
+            .Select(static x => x.ToString()).ToList();
+        tokenEndpointAuthMethodsSupported.Should().Contain("private_key_jwt");
+    }
+    
+    [Fact]
+    [Trait("Category", Category)]
+    public async Task token_endpoint_auth_methods_supported_should_contain_client_secret_jwt()
+    {
+        IdentityServerPipeline pipeline = new IdentityServerPipeline();
+        pipeline.OnConfigureIdentityServer += builder => builder.AddJwtBearerClientAuthentication();
+        pipeline.Initialize();
+        pipeline.Options.Endpoints.EnableAuthorizeEndpoint = false;
+
+        var result = await pipeline.BackChannelClient.GetAsync("https://server/.well-known/openid-configuration");
+
+        var json = await result.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+        var tokenEndpointAuthMethodsSupported = data["token_endpoint_auth_methods_supported"].EnumerateArray()
+            .Select(static x => x.ToString()).ToList();
+        tokenEndpointAuthMethodsSupported.Should().Contain("client_secret_jwt");
+    }
 }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Duende.IdentityServer.Models;
@@ -47,6 +48,12 @@ public static class ClientExtensions
             .Select(s => new Microsoft.IdentityModel.Tokens.JsonWebKey(s.Value))
             .ToList();
         keys.AddRange(jwks);
+
+        var symmetricKeys = secretList
+            .Where(static s => s.Type == IdentityServerConstants.SecretTypes.SharedSecret && s.Value.Length >= 16)
+            .Select(static s => new SymmetricSecurityKey(Encoding.UTF8.GetBytes(s.Value)))
+            .ToList();
+        keys.AddRange(symmetricKeys);
 
         return Task.FromResult(keys);
     }

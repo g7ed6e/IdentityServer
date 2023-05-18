@@ -71,6 +71,7 @@ public class IdentityServerPipeline
 
     public event Action<IServiceCollection> OnPreConfigureServices = services => { };
     public event Action<IServiceCollection> OnPostConfigureServices = services => { };
+    public event Action<IIdentityServerBuilder> OnConfigureIdentityServer = builder => { };
     public event Action<IApplicationBuilder> OnPreConfigure = app => { };
     public event Action<IApplicationBuilder> OnPostConfigure = app => { };
 
@@ -126,7 +127,7 @@ public class IdentityServerPipeline
             return handler;
         });
 
-        services.AddIdentityServer(options =>
+        var builder = services.AddIdentityServer(options =>
             {
                 options.Events = new EventsOptions
                 {
@@ -145,7 +146,8 @@ public class IdentityServerPipeline
             .AddInMemoryApiScopes(ApiScopes)
             .AddTestUsers(Users)
             .AddDeveloperSigningCredential(persistKey: false);
-
+        OnConfigureIdentityServer(builder);
+        
         services.AddHttpClient(IdentityServerConstants.HttpClients.BackChannelLogoutHttpClient)
             .AddHttpMessageHandler(() => BackChannelMessageHandler);
 
